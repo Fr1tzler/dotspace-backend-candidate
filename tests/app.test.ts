@@ -86,6 +86,16 @@ describe('registration API', () => {
     expect(await Registration.count()).toBe(1);
   });
 
+  it('omits registrations when full w/ race condition', async () => {
+    const promises = Array.from(Array(100)).map((_, idx) => request(app)
+        .post(`/events/${SEED_EVENT_IDS.main}/registrations`)
+        .send({ userId: seedUserId(idx + 1) })
+    )
+
+    await Promise.allSettled(promises);
+    expect(await Registration.count()).toBe(10);
+  });
+
   it('returns the existing registration for a sequential retry', async () => {
     const first = await request(app)
       .post(`/events/${SEED_EVENT_IDS.main}/registrations`)
